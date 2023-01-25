@@ -4,7 +4,8 @@ Python channelflow code with wall actuations for control
 The 25 intial conditions used for testing in the paper are located in TestData and the code used to generate trajectories is located in Slots. To run an example trajectory simply run Env.py in the Slots directory. The if __name__ == '__main__': portion of the code shows how to load the environment and run it.
 
 Listed below are the set of packages I had in conda when running this code:
-# Name                    Version                   Build  Channel
+
+Name                    Version                   Build  Channel
 alabaster                 0.7.12             pyhd3eb1b0_0
 appdirs                   1.4.4              pyhd3eb1b0_0
 applaunchservices         0.2.1              pyhd3eb1b0_0
