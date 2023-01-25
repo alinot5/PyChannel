@@ -238,7 +238,7 @@ if __name__ == '__main__':
         observation = env.reset()
         
         # Loop over actions
-        done=True
+        done=False
         i=0
         while not done:
             # Pick an action
