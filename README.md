@@ -1,5 +1,5 @@
 # PyChannel
-Python channelflow code with wall actuations for control
+Python channelflow code with wall actuations for control in this paper: https://arxiv.org/abs/2301.12098
 
 To run this code you need to first install Anaconda. Then download the enironment.yml file and create an environment with it by running "conda env create -f environment.yml" in the directory where the environment.yml file is located. Alternatively, open the Anaconda navigator, click on the environments tab, click the import button, and then find the environment.yml file. This is a copy of the environment we ran to validate the code works. You may not need all of the packages in this environment
 
