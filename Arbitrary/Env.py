@@ -148,7 +148,7 @@ class DNS():
             
         return u_save
 
-    def reset(self,upath='../TestData/u'+str(np.random.randint(25))+'.p'):
+    def reset(self,upath='../TestData/u'+str(np.random.randint(25)+1)+'.p'):
         
         # Reset the time and actuation location
         self.t=0
