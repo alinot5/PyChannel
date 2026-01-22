@@ -19,6 +19,7 @@ import pickle
 import time
 import numba
 
+
 class DNS():
     
     def __init__(self,Vmax=1/20,T_act=5,T=99.9,T_save=0.2,savefield=False,Re=400,theta=0,actp=0,scale=1,obs_type='Full',obs_space=[np.arange(6),np.arange(3),np.arange(2),np.arange(3)]):
@@ -33,8 +34,8 @@ class DNS():
         self.scale=scale
 
         # Initialize solver
-        self.N=[32,35,32,3,1]
-        self.x=[.875*2*math.pi,2,.6*2*math.pi]
+        self.N=[32,35,32,3,1] # EDIT THIS, RUNS FASTEST FOR POWERS OF 2 ON X,Z, ODD NUMBERS FOR Y. ARRAY GPES X,Y,Z,Velocity(u,v,w),Number of stored fields
+        self.x=[.875*2*math.pi,2,.3*2*math.pi] # TRY CHANGING .6 TO OTHER VALUES, e.g .3
         self.sol=Solver([self.N[1],self.N[0],self.N[2],self.N[3],self.N[4]],[self.x[1],self.x[0],self.x[2]],store=True,Re=Re)
         self.baseflow=self.sol.y
         
@@ -227,31 +228,55 @@ def Time(text,name='Time.txt'):
 
 #%% main function            
 if __name__ == '__main__':
-    
+    np.random.seed(0)
     # Load the environment (This outputs Fourier Chebyshev coefficients as the state. Set 'Spectral' to 'Full' to get the full state.)
-    env=DNS(1/20,5,19.9,1,True,400,'None',1,1,'Spectral',[np.arange(6),np.arange(3),np.arange(2),np.arange(3)])
+    env=DNS(1/20,5,4.9,1,True,400,'None',1,1,'Spectral',[np.arange(6),np.arange(3),np.arange(2),np.arange(3)])
     
     # Loop over episodes
     n_episodes=1
+
+    max_steps = 3 #Caps timing steps
+    energies = []
+    times = [] # Stores timings
+
+
     for ep in range(n_episodes):
         # Reset the environment
         observation = env.reset()
-        
         # Loop over actions
         done=False
         i=0
-        while not done:
+        while i < max_steps: #Caps loop
             # Pick an action
             act=0*(-np.ones(1))
             start=time.time()
             
             # Run the environment for a step
             state,reward,done=env.step(act)
+
+            end = time.time()
             
+            #Records results
+            energies.append(np.linalg.norm(state))
+            times.append(end - start)
+
+
             # Output timing
             Time('Loop '+str(i))
             i+=1
             Time(str(time.time()-start))
             Time(str(state.shape))
 
+    # Save reference data
+    np.save(r"Results\New\energy_new.npy", np.array(energies))
+    np.save(r"Results\New\timing_new.npy", np.array(times))
+    print("Average step time:", np.mean(times))
 
+    #Plot
+    plt.figure()
+    plt.plot(energies, marker='o')
+    plt.xlabel("Step")
+    plt.ylabel("State (spectral energy proxy)")
+    plt.title("Baseline short-run diagnostic")
+    plt.grid(True)
+    plt.show()

@@ -1,0 +1,11 @@
+# Output / results
+Out.txt
+Time.txt
+Slots/Out.txt
+Slots/Time.txt
+Slots/Results/
+Slots/data/
+
+# Python cache
+__pycache__/
+*.pyc
