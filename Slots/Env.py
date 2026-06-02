@@ -199,12 +199,12 @@ class DNS():
         self.phi=0
         self.Out('New episode')
         self.episode+=1
-        
+        print(upath)
         us=pickle.load(open(upath,'rb'))
         us = cp.asarray(us)
         us=us[:,:,:,:,cp.newaxis]
         pf=0*us[:,:,:,0,0]
-
+        
         # Add random phase, keep the current phase, or set a specific phase
         if self.theta=='Random':
             theta=cp.random.rand(1)*2*math.pi
@@ -235,19 +235,20 @@ def Time(text,name='Time.txt'):
 if __name__ == '__main__':
     cp.random.seed(0)
     # Load the environment (This outputs Fourier Chebyshev coefficients as the state. Set 'Spectral' to 'Full' to get the full state.)
-    env=DNS(1/20,0.05,4.9,1,True,400,'None',1,1,'Spectral',[cp.arange(6),cp.arange(3),cp.arange(2),cp.arange(3)])
+    env=DNS(1/20,0.02,4.9,0.02,True,400,'None',1,1,'Spectral',[cp.arange(6),cp.arange(3),cp.arange(2),cp.arange(3)])
     
     # Loop over episodes
     n_episodes=1
 
-    max_steps = 0.03 #Caps timing steps
+    max_steps = 2 #Caps timing steps
     energies = []
     times = [] # Stores timings
 
 
     for ep in range(n_episodes):
         # Reset the environment
-        observation = env.reset()
+        observation = env.reset(upath="/scratch4/workspace/vkini_umass_edu-shared/Comparisons/data_numpy/1/u20.00.p")
+
         # Loop over actions
         done=False
         i=0
@@ -271,14 +272,25 @@ if __name__ == '__main__':
             i+=1
             Time(str(time.time()-start))
             Time(str(state.shape))
-
-    q=pickle.load(open("/scratch4/workspace/vkini_umass_edu-shared/Comparisons/data_numpy/q10.00.p","rb"))
-    print(q.shape)
-    np.linalg.norm(q-cuq)
     # Save reference data
     np.save(r"Results/New/energy_new.npy", cp.asnumpy(cp.array(energies)))
     np.save(r"Results/New/timing_new.npy", cp.asnumpy(cp.array(times)))
     print("Average step time:", cp.mean(cp.array(times)))
+
+
+    cpu_pickle = pickle.load(open("/home/vkini_umass_edu/PyChannel/Slots/data/1/u0.02.p","rb"))
+    # print(cpu_pickle.shape)
+    gpu_pickle = pickle.load(open("/scratch4/workspace/vkini_umass_edu-shared/varun-cuda/PyChannel/Slots/data/1/u0.02.p","rb"))
+    # print(gpu_pickle.shape)
+
+    # diff = cpu_pickle - gpu_pickle
+
+    # abs_err = np.linalg.norm(diff)
+    # rel_err = abs_err / np.linalg.norm(cpu_pickle)
+
+    # print("Absolute error:", abs_err)
+    # print("Relative error:", rel_err)
+
 
     #Plot
     plt.figure()
@@ -287,4 +299,27 @@ if __name__ == '__main__':
     plt.ylabel("State (spectral energy proxy)")
     plt.title("Baseline short-run diagnostic")
     plt.grid(True)
-    plt.show()                    
+    plt.show()    
+
+    cp_cpu_pickle = cp.array(cpu_pickle)
+
+    print("difference:", np.linalg.norm(cpu_pickle - cp.asnumpy(cp_cpu_pickle))) 
+
+    u=env.sol.ifft(env.sol.icheb(cp.array(cpu_pickle)))
+    u2=env.sol.ifft(env.sol.icheb(cp.array(gpu_pickle)))
+
+    u_numpy = u.get()
+    u2_numpy = u2.get()
+
+    print(u_numpy.shape)
+    print(u2_numpy.shape)
+    print(np.linalg.norm(u-u2))
+    plt.figure()
+    plt.pcolormesh(u_numpy[4,:,:,0,0].real)
+    plt.colorbar()
+    plt.savefig("CPU.png")   
+
+    plt.figure()
+    plt.pcolormesh(u2_numpy[4,:,:,0,0].real)
+    plt.colorbar()
+    plt.savefig("GPU.png")          

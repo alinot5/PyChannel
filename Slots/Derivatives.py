@@ -468,29 +468,42 @@ class Derivatives: # This will be the GPU testing enviroment
     def icheb(self,u,threads=-1):
         u = u.astype(cp.complex128)
 
-        u = cp.copy(u)
-        u[0] *= 2
-        u[-1] *= 2
+        utemp = cp.copy(u)+1j*0
+        utemp[-1,:] = utemp[-1,:] * 2
+        utemp[0,:] = utemp[0,:] * 2
+        utemp = utemp * (self.N[0] - 1)
 
-        u *= self.N[0] - 1
+        k = cp.arange(0, self.N[0])[:,cp.newaxis,cp.newaxis,cp.newaxis,cp.newaxis]
+        u0 = cp.sum(u * (-1)**k, axis=0)
+        
+        uN = cp.sum(u, axis=0)
 
-        u_ext = cp.concatenate((u, cp.flip(u[1:-1], axis=0)), axis=0)
+        utemp = (utemp - uN) * (-1)**k - u0
 
-        u_phys = cp.fft.ifft(u_ext, axis=0).real
+        utemp_ext = cp.concatenate((utemp, cp.flip(utemp[1:-1,:,:,:,:], axis=0)), axis=0)
 
-        return u_phys[:self.N[0]]
+        uicheb = cp.fft.ifft(utemp_ext, axis=0)
+
+        uicheb = uicheb[:self.N[0],:,:,:,:]
+
+        uicheb[-1,:] = uN
+        uicheb[0,:]  = u0
+
+        return uicheb
     
     #Instead of np.polynomial.chebyshev.chebder(...), create a new function that computes chebyshev using cupy
     def cheb_derivative(self, a): 
         N = a.shape[0]
         b = cp.zeros_like(a)
 
-        b[-2] = 2*(N-1)*a[-1]
 
-        for k in range(N - 3, -1, -1):
-            b[k] = b[k+2] + 2*(k+1)*a[k+1]
-        
-        b[0] *= 0.5
+        for j in range(N-1, 2, -1):
+            b[j - 1] = (2 * j) * a[j]
+            a[j - 2] += (j * a[j]) / (j - 2)
+            if (N-1) > 1:
+                b[1] = 4 * a[2]
+            b[0] = a[1]
+        a = b
         return b
 
     # Basic derivative functions
