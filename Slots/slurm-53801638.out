@@ -1,0 +1,5 @@
+Loading cuda version 12.8
+
+CondaError: Run 'conda init' before 'conda activate'
+
+python: can't open file '/scratch4/workspace/vkini_umass_edu-shared/varun-cuda/PyChannel/Slots/testGPU.py': [Errno 2] No such file or directory
